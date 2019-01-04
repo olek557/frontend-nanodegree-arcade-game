@@ -1,39 +1,90 @@
-// Enemies our player must avoid
-var Enemy = function() {
-    // Variables applied to each of our instances go here,
-    // we've provided one for you to get started
+const BOARD_OFFSET = 50,
+      COL_WIDTH = 101,
+      COL_HEIGHT = 83;
 
-    // The image/sprite for our enemies, this uses
-    // a helper we've provided to easily load images
+// ENEMY CLASS
+var Enemy = function(row) {
+    this.setSpeed();
+    this.x = 0;
+    this.y = (row - 1 ) * COL_HEIGHT + BOARD_OFFSET;
     this.sprite = 'images/enemy-bug.png';
 };
 
-// Update the enemy's position, required method for game
-// Parameter: dt, a time delta between ticks
+Enemy.prototype.setSpeed = function() {
+    this.speed = Math.floor(Math.random() * 150) + 150;
+}
+
 Enemy.prototype.update = function(dt) {
-    // You should multiply any movement by the dt parameter
-    // which will ensure the game runs at the same speed for
-    // all computers.
+    if(this.x < 505) {
+        this.x += dt * this.speed;
+    }
+    else {
+        this.setSpeed();
+        this.x = 0;
+    }
+    this.checkCollision();
 };
 
-// Draw the enemy on the screen, required method for game
+Enemy.prototype.checkCollision = function() {
+  if (this.y > player.y - 50 && this.y < player.y + 50 && this.x > player.x - 70 && this.x < player.x + 70) {
+    player.moveToStart();
+  }
+};
+
 Enemy.prototype.render = function() {
     ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
 };
 
-// Now write your own player class
-// This class requires an update(), render() and
-// a handleInput() method.
+// PLAYER CLASS
+var Player = function() {
+    this.sprite = 'images/char-boy.png';
+    this.moveToStart();
+};
 
+Player.prototype.moveToStart = function() {
+    this.x = COL_WIDTH * 2;
+    this.y = COL_HEIGHT + BOARD_OFFSET * 6;
+};
 
-// Now instantiate your objects.
-// Place all enemy objects in an array called allEnemies
-// Place the player object in a variable called player
+Player.prototype.update = function(dx, dy) {
+    if(this.y == -32) {
+        console.log('win');
+        setTimeout(function() {
+            player.moveToStart();
+        }, 500);
+    }
+};
 
+Player.prototype.render = function() {
+    ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
+};
 
+Player.prototype.handleInput = function(key) {
+    switch(key){
+        case 'left':
+            if(this.x > 0)
+                this.x -= COL_WIDTH;
+            break;
+        case 'right':
+            if(this.x < 505 - 101)
+                this.x += COL_WIDTH;
+            break;
+        case 'up':
+            if(this.y > 0)
+                this.y -= COL_HEIGHT;
+            break;
+        case 'down':
+            if(this.y < COL_HEIGHT * 6 - 150)
+                this.y += COL_HEIGHT;
+            break;
+    }
+};
 
-// This listens for key presses and sends the keys to your
-// Player.handleInput() method. You don't need to modify this.
+// INIT GAME
+let allEnemies = [],
+    player = new Player();
+[1, 2, 3].forEach(enemy => allEnemies.push(new Enemy(enemy)));
+
 document.addEventListener('keyup', function(e) {
     var allowedKeys = {
         37: 'left',
@@ -41,6 +92,5 @@ document.addEventListener('keyup', function(e) {
         39: 'right',
         40: 'down'
     };
-
     player.handleInput(allowedKeys[e.keyCode]);
 });
